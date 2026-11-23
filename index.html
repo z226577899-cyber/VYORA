@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0e1c">
+  <title>VYORA | أعد بناء يومك</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-symbol">V</div>
+        <div>
+          <h1>VYORA</h1>
+          <span>Your day. Reimagined.</span>
+        </div>
+      </div>
+
+      <div class="sidebar-label">مساحة العمل</div>
+
+      <nav class="navigation">
+        <button class="nav-link active" data-page="home">
+          <span class="nav-icon">⌂</span>
+          <span>الرئيسية</span>
+        </button>
+
+        <button class="nav-link" data-page="tasks">
+          <span class="nav-icon">▤</span>
+          <span>مهامي</span>
+        </button>
+
+        <button class="nav-link" data-page="schedule">
+          <span class="nav-icon">◷</span>
+          <span>جدولي اليومي</span>
+        </button>
+
+        <button class="nav-link" data-page="stats">
+          <span class="nav-icon">▥</span>
+          <span>تحليل أدائي</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-note">
+          <span class="note-icon">✦</span>
+          <p>التغيير الكبير يبدأ بخطوة صغيرة.</p>
+        </div>
+        <span class="version">VYORA · الإصدار 1.0</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+
+      <header class="topbar">
+        <div>
+          <div class="topbar-label">مساحتك الشخصية</div>
+          <h2 id="page-heading">الرئيسية</h2>
+        </div>
+
+        <div class="topbar-date">
+          <span class="date-dot"></span>
+          <span id="current-date">اليوم</span>
+        </div>
+      </header>
+
+      <!-- الصفحة الرئيسية -->
+      <section class="page active" id="home-page">
+
+        <div class="welcome-section">
+          <div>
+            <span class="eyebrow">بداية جديدة، فرصة جديدة</span>
+            <h2>أهلاً بك في <span>يومك.</span></h2>
+            <p>لا تحتاج إلى إنجاز كل شيء اليوم، فقط ابدأ بما يستحق.</p>
+          </div>
+          <div class="welcome-decoration">V.</div>
+        </div>
+
+        <div class="home-grid">
+
+          <article class="daily-card verse-card">
+            <div class="card-topline">
+              <span class="card-kicker">نور اليوم</span>
+              <span class="card-symbol">۞</span>
+            </div>
+            <h3>آية اليوم</h3>
+            <p class="daily-text" id="verse-text"></p>
+            <span class="daily-source" id="verse-source"></span>
+          </article>
+
+          <article class="daily-card wisdom-card">
+            <div class="card-topline">
+              <span class="card-kicker">فكرة تستحق التأمل</span>
+              <span class="card-symbol">✳</span>
+            </div>
+            <h3>حكمة اليوم</h3>
+            <p class="daily-text" id="wisdom-text"></p>
+            <button class="text-action" id="next-wisdom" type="button">
+              حكمة أخرى ←
+            </button>
+          </article>
+
+          <article class="daily-card dhikr-card">
+            <div class="card-topline">
+              <span class="card-kicker">لحظة سكينة</span>
+              <span class="card-symbol">◇</span>
+            </div>
+            <h3>ذكر اليوم</h3>
+            <p class="daily-text" id="dhikr-text"></p>
+            <button class="text-action" id="next-dhikr" type="button">
+              ذكر آخر ←
+            </button>
+          </article>
+
+        </div>
+
+        <section class="focus-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">ابدأ من هنا</span>
+              <h3>ما الذي يستحق اهتمامك الآن؟</h3>
+            </div>
+            <span class="focus-mark">01</span>
+          </div>
+
+          <div class="focus-content" id="focus-content">
+            <p>لم تتم إضافة مهام بعد. أضف مهمتك الأولى لتظهر هنا.</p>
+            <button class="primary-button" type="button" data-go="tasks">
+              أضف مهمتك الأولى
+            </button>
+          </div>
+        </section>
+
+        <div class="home-footer">
+          <span>يومك ليس سباقاً.</span>
+          <span>اصنع تقدماً يمكنك الاستمرار فيه.</span>
+        </div>
+
+      </section>
+
+      <!-- صفحة المهام -->
+      <section class="page" id="tasks-page">
+
+        <div class="page-intro">
+          <span class="eyebrow">حوّل أفكارك إلى أفعال</span>
+          <h2>مساحة مهامك</h2>
+          <p>أضف المهام، حدد أولوياتها، وتابع تقدمك خطوة بخطوة.</p>
+        </div>
+
+        <section class="task-form-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">مهمة جديدة</span>
+              <h3>ماذا تريد أن تنجز؟</h3>
+            </div>
+            <span class="form-indicator">+</span>
+          </div>
+
+          <form id="task-form">
+            <input type="hidden" id="editing-task-id">
+
+            <div class="form-field">
+              <label for="task-title">اسم المهمة</label>
+              <input
+                id="task-title"
+                type="text"
+                maxlength="100"
+                placeholder="مثلاً: إعداد العرض التقديمي"
+                required
+              >
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="task-category">التصنيف</label>
+                <select id="task-category">
+                  <option value="شخصي">شخصي</option>
+                  <option value="دراسة">دراسة</option>
+                  <option value="عمل">عمل</option>
+                  <option value="مشروع">مشروع</option>
+                  <option value="أخرى">أخرى</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label for="task-priority">الأولوية</label>
+                <select id="task-priority">
+                  <option value="high">عالية</option>
+                  <option value="medium" selected>متوسطة</option>
+                  <option value="low">منخفضة</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="task-duration">المدة المتوقعة (دقيقة)</label>
+                <input
+                  id="task-duration"
+                  type="number"
+                  min="1"
+                  max="1440"
+                  value="30"
+                  required
+                >
+              </div>
+
+              <div class="form-field">
+                <label for="task-time">وقت التنفيذ (اختياري)</label>
+                <input id="task-time" type="time">
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="task-description">تفاصيل إضافية (اختياري)</label>
+              <textarea
+                id="task-description"
+                rows="2"
+                maxlength="500"
+                placeholder="اكتب ما يساعدك على تنفيذ المهمة..."
+              ></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button class="primary-button" id="task-submit" type="submit">
+                إضافة المهمة
+              </button>
+              <button class="secondary-button hidden" id="cancel-edit" type="button">
+                إلغاء التعديل
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="tasks-list-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">قائمة التنفيذ</span>
+              <h3>كل ما ينتظرك</h3>
+            </div>
+            <span class="task-count" id="task-count">0 مهمة</span>
+          </div>
+
+          <div class="task-filters">
+            <button class="filter-button active" data-filter="all" type="button">الكل</button>
+            <button class="filter-button" data-filter="pending" type="button">قيد التنفيذ</button>
+            <button class="filter-button" data-filter="completed" type="button">مكتملة</button>
+          </div>
+
+          <div id="tasks-list" class="tasks-list">
+            <div class="empty-state">
+              <span class="empty-icon">＋</span>
+              <h4>مساحتك ما زالت فارغة</h4>
+              <p>أضف مهمة لتبدأ بتحويل خططك إلى إنجازات.</p>
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- صفحة الجدول اليومي -->
+      <section class="page" id="schedule-page">
+
+        <div class="page-intro">
+          <span class="eyebrow">وقتك يستحق التنظيم</span>
+          <h2>جدولك اليومي</h2>
+          <p>اعرض مهامك وفق أوقات التنفيذ التي حددتها بنفسك.</p>
+        </div>
+
+        <div class="schedule-summary" id="schedule-summary">
+          <div>
+            <span>المهام المجدولة</span>
+            <strong id="scheduled-count">0</strong>
+          </div>
+          <div>
+            <span>مهام بلا وقت محدد</span>
+            <strong id="unscheduled-count">0</strong>
+          </div>
+        </div>
+
+        <section class="timeline-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">تسلسل يومك</span>
+              <h3>الخط الزمني</h3>
+            </div>
+            <span class="timeline-mark">24H</span>
+          </div>
+
+          <div id="timeline" class="timeline">
+            <div class="empty-state">
+              <span class="empty-icon">◷</span>
+              <h4>لم تحدد أوقاتاً بعد</h4>
+              <p>أضف وقتاً لمهامك حتى تظهر هنا مرتبة زمنياً.</p>
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- صفحة تحليل الأداء -->
+      <section class="page" id="stats-page">
+
+        <div class="page-intro">
+          <span class="eyebrow">التقدم يبدأ بالوعي</span>
+          <h2>تحليل أدائك</h2>
+          <p>أرقام حقيقية مستمدة من مهامك، وليست تقديرات عشوائية.</p>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-label">إجمالي المهام</span>
+            <strong id="stat-total">0</strong>
+            <span class="stat-description">كل المهام المسجلة</span>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">المهام المكتملة</span>
+            <strong id="stat-completed">0</strong>
+            <span class="stat-description">ما أنجزته حتى الآن</span>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">المهام المتبقية</span>
+            <strong id="stat-pending">0</strong>
+            <span class="stat-description">ما يزال ينتظر إنجازك</span>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">الوقت المقدر المتبقي</span>
+            <strong id="stat-minutes">0</strong>
+            <span class="stat-description">دقيقة للمهام غير المكتملة</span>
+          </article>
+        </div>
+
+        <section class="performance-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">مؤشر التقدم</span>
+              <h3>نسبة الإنجاز</h3>
+            </div>
+            <strong id="completion-percent">0%</strong>
+          </div>
+
+          <div class="progress-track">
+            <div id="completion-bar" class="progress-bar"></div>
+          </div>
+
+          <p id="performance-message" class="performance-message">
+            أضف مهامك الأولى لتبدأ متابعة تقدمك.
+          </p>
+        </section>
+
+        <section class="category-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">أين يذهب اهتمامك؟</span>
+              <h3>توزيع المهام حسب التصنيف</h3>
+            </div>
+          </div>
+          <div id="category-breakdown" class="category-breakdown">
+            <p class="empty-message">ستظهر بيانات التصنيفات بعد إضافة المهام.</p>
+          </div>
+        </section>
+
+      </section>
+
+      <footer class="main-footer">
+        <span>VYORA</span>
+        <span>خطط بوعي. أنجز بهدوء.</span>
+      </footer>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
