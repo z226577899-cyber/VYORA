@@ -1,0 +1,21 @@
+
+{
+  "name": "VYORA | أعد بناء يومك",
+  "short_name": "VYORA",
+  "description": "خطط بوعي. أنجز بهدوء.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0e1c",
+  "theme_color": "#0b0e1c",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
