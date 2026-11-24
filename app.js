@@ -151,8 +151,10 @@ function updateDate() {
 const pageNames = {
   home: "الرئيسية",
   tasks: "مهامي",
+  study: "استوديو الدراسة",
   schedule: "جدولي اليومي",
-  stats: "تحليل أدائي"
+  stats: "تحليل أدائي",
+  data: "إدارة البيانات"
 };
 
 function showPage(pageName) {
@@ -184,12 +186,20 @@ function showPage(pageName) {
     renderTasks();
   }
 
+  if (pageName === "study") {
+    renderStudyTasks();
+  }
+
   if (pageName === "schedule") {
     renderSchedule();
   }
 
   if (pageName === "stats") {
     renderStats();
+  }
+
+  if (pageName === "data") {
+    // صفحة إدارة البيانات جاهزة
   }
 
   window.scrollTo({
@@ -993,6 +1003,10 @@ function renderEverything() {
   renderFocusTask();
   renderSchedule();
   renderStats();
+
+  if (typeof renderStudyTasks === "function") {
+    renderStudyTasks();
+  }
 }
 
 /* =====================================
@@ -1005,6 +1019,529 @@ function startApp() {
   renderEverything();
   showPage("home");
 }
+
+
+// VYORA STUDY ENGINE
+const STUDY_KEY = "vyora_study_timer_v1";
+const studySelect = getElement("study-task-select");
+let studyTimer = null;
+let studyInterval = null;
+
+function studySettings() {
+  const read = (id, fallback, max) => {
+    const n = Number(getElement(id)?.value);
+    return Number.isInteger(n) && n >= 1 && n <= max ? n : fallback;
+  };
+  return {
+    focus: read("focus-duration", 25, 120),
+    short: read("short-break-duration", 5, 60),
+    long: read("long-break-duration", 15, 90)
+  };
+}
+
+function saveStudy() {
+  localStorage.setItem(STUDY_KEY, JSON.stringify(studyTimer));
+}
+
+function selectedStudyTask() {
+  return tasks.find(t => t.id === studyTimer?.taskId);
+}
+
+function renderStudyTasks() {
+  if (!studySelect) return;
+  studySelect.replaceChildren();
+
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = "اختر مهمة من مهامك الدراسية";
+  studySelect.appendChild(first);
+
+  tasks.filter(t => t.category === "دراسة" && !t.completed).forEach(t => {
+    const option = document.createElement("option");
+    option.value = t.id;
+    option.textContent = t.title + " — " + formatMinutes(t.duration);
+    studySelect.appendChild(option);
+  });
+
+  if (studyTimer?.taskId) studySelect.value = studyTimer.taskId;
+  renderStudy();
+}
+
+function clockText(ms) {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  return String(Math.floor(seconds / 60)).padStart(2, "0") + ":" +
+    String(seconds % 60).padStart(2, "0");
+}
+
+function studySound() {
+  try {
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) return;
+    const ctx = new Audio();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.frequency.value = 850;
+    gain.gain.value = 0.12;
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.4);
+    oscillator.onended = () => ctx.close();
+  } catch (error) {
+    console.warn("الصوت غير متاح", error);
+  }
+}
+
+function studyNotice(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification(title, { body, icon: "./icon.svg" });
+    } catch (_) {}
+  }
+}
+
+function renderStudy() {
+  if (!studyTimer) return;
+  const task = selectedStudyTask();
+  getElement("study-task-title").textContent =
+    task ? task.title : "لم تختر مهمة بعد";
+  getElement("study-task-duration").textContent =
+    task ? "المدة المقدرة: " + formatMinutes(task.duration) :
+    "اختر مهمة من قائمة مهامي للبدء.";
+
+  getElement("timer-display").textContent = clockText(studyTimer.remainingMs);
+  getElement("timer-sessions").textContent = studyTimer.sessions || 0;
+
+  const labels = {
+    focus: "وقت التركيز",
+    short: "استراحة قصيرة",
+    long: "استراحة طويلة",
+    done: "اكتملت مدة المهمة"
+  };
+  getElement("timer-mode").textContent = labels[studyTimer.mode] || "جاهز للتركيز";
+
+  const total = Math.max(1, studyTimer.phaseTotalMs || 1);
+  const percent = 100 * (1 - studyTimer.remainingMs / total);
+  getElement("timer-progress-bar").style.width =
+    Math.max(0, Math.min(100, percent)) + "%";
+
+  getElement("timer-start").disabled =
+    studyTimer.running || !task || studyTimer.mode === "done";
+  getElement("timer-start").textContent =
+    studyTimer.running ? "الجلسة تعمل" : "ابدأ / استأنف";
+  getElement("timer-pause").disabled = !studyTimer.running;
+}
+
+function beginStudyPhase(mode, run = true) {
+  const task = selectedStudyTask();
+  if (!task) return;
+
+  const settings = studySettings();
+  let minutes;
+
+  if (mode === "focus") {
+    if (studyTimer.remainingFocusMs <= 0) {
+      studyTimer.mode = "done";
+      studyTimer.running = false;
+      studyTimer.remainingMs = 0;
+      studyTimer.deadline = null;
+      saveStudy();
+      renderStudy();
+      return;
+    }
+    minutes = Math.min(settings.focus, Math.ceil(studyTimer.remainingFocusMs / 60000));
+  } else {
+    minutes = mode === "long" ? settings.long : settings.short;
+  }
+
+  studyTimer.mode = mode;
+  studyTimer.remainingMs = minutes * 60000;
+  studyTimer.phaseTotalMs = studyTimer.remainingMs;
+  studyTimer.running = run;
+  studyTimer.deadline = run ? Date.now() + studyTimer.remainingMs : null;
+  saveStudy();
+  renderStudy();
+  runStudyClock();
+}
+
+function finishStudyPhase() {
+  if (!studyTimer?.running) return;
+
+  const finished = studyTimer.mode;
+  studyTimer.running = false;
+  studyTimer.remainingMs = 0;
+  studyTimer.deadline = null;
+
+  if (finished === "focus") {
+    studyTimer.remainingFocusMs = Math.max(
+      0, studyTimer.remainingFocusMs - studyTimer.phaseTotalMs
+    );
+    studyTimer.sessions++;
+
+    studySound();
+    studyNotice("انتهى التركيز", "حان وقت الاستراحة.");
+
+    if (studyTimer.remainingFocusMs <= 0) {
+      studyTimer.mode = "done";
+      saveStudy();
+      renderStudy();
+      studyNotice("أحسنت!", "انتهت مدة الدراسة المقدرة للمهمة.");
+      return;
+    }
+
+    beginStudyPhase(studyTimer.sessions % 4 === 0 ? "long" : "short");
+    return;
+  }
+
+  studySound();
+  studyNotice("انتهت الاستراحة", "حان وقت العودة للدراسة.");
+  beginStudyPhase("focus");
+}
+
+function runStudyClock() {
+  if (studyInterval) clearInterval(studyInterval);
+  if (!studyTimer?.running) return;
+
+  studyInterval = setInterval(() => {
+    studyTimer.remainingMs = Math.max(0, studyTimer.deadline - Date.now());
+
+    if (studyTimer.remainingMs <= 0) {
+      clearInterval(studyInterval);
+      studyInterval = null;
+      finishStudyPhase();
+    } else {
+      renderStudy();
+      saveStudy();
+    }
+  }, 500);
+}
+
+function startStudy() {
+  if (!studyTimer?.taskId || !selectedStudyTask()) {
+    alert("اختر مهمة دراسية أولاً.");
+    return;
+  }
+  if (studyTimer.mode === "done") {
+    alert("انتهت مدة المهمة. اضغط إعادة ضبط لبدء دورة جديدة.");
+    return;
+  }
+
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
+
+  if (studyTimer.remainingMs <= 0) {
+    beginStudyPhase("focus");
+  } else {
+    studyTimer.running = true;
+    studyTimer.deadline = Date.now() + studyTimer.remainingMs;
+    saveStudy();
+    renderStudy();
+    runStudyClock();
+  }
+}
+
+function pauseStudy() {
+  if (!studyTimer?.running) return;
+  studyTimer.remainingMs = Math.max(0, studyTimer.deadline - Date.now());
+  studyTimer.running = false;
+  studyTimer.deadline = null;
+  clearInterval(studyInterval);
+  studyInterval = null;
+  saveStudy();
+  renderStudy();
+}
+
+function resetStudy() {
+  const task = selectedStudyTask();
+  if (!task) {
+    alert("اختر مهمة دراسية أولاً.");
+    return;
+  }
+  clearInterval(studyInterval);
+  studyInterval = null;
+  studyTimer = {
+    taskId: task.id,
+    mode: "focus",
+    remainingFocusMs: task.duration * 60000,
+    remainingMs: 0,
+    phaseTotalMs: 0,
+    sessions: 0,
+    running: false,
+    deadline: null
+  };
+  beginStudyPhase("focus", false);
+}
+
+function loadStudy() {
+  try {
+    studyTimer = JSON.parse(localStorage.getItem(STUDY_KEY));
+  } catch (_) {
+    studyTimer = null;
+  }
+
+  if (!studyTimer || typeof studyTimer.remainingMs !== "number") {
+    studyTimer = {
+      taskId: null,
+      mode: "focus",
+      remainingFocusMs: 0,
+      remainingMs: 25 * 60000,
+      phaseTotalMs: 25 * 60000,
+      sessions: 0,
+      running: false,
+      deadline: null
+    };
+  }
+
+  if (studyTimer.running && studyTimer.deadline) {
+    studyTimer.remainingMs = Math.max(0, studyTimer.deadline - Date.now());
+    if (studyTimer.remainingMs <= 0) {
+      finishStudyPhase();
+    } else {
+      runStudyClock();
+    }
+  }
+  renderStudy();
+}
+
+studySelect?.addEventListener("change", () => {
+  clearInterval(studyInterval);
+  studyInterval = null;
+  const task = tasks.find(t =>
+    t.id === studySelect.value && t.category === "دراسة" && !t.completed
+  );
+
+  studyTimer = {
+    taskId: task?.id || null,
+    mode: "focus",
+    remainingFocusMs: task ? task.duration * 60000 : 0,
+    remainingMs: task
+      ? Math.min(studySettings().focus, task.duration) * 60000
+      : studySettings().focus * 60000,
+    phaseTotalMs: task
+      ? Math.min(studySettings().focus, task.duration) * 60000
+      : studySettings().focus * 60000,
+    sessions: 0,
+    running: false,
+    deadline: null
+  };
+  saveStudy();
+  renderStudy();
+});
+
+getElement("timer-start").addEventListener("click", startStudy);
+getElement("timer-pause").addEventListener("click", pauseStudy);
+getElement("timer-reset").addEventListener("click", resetStudy);
+
+loadStudy();
+
+
+/* =====================================
+   VYORA DATA GUARD — BACKUP SYSTEM
+===================================== */
+
+function getVYORAData() {
+  return {
+    tasks: JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"),
+    dailyContent: JSON.parse(localStorage.getItem(CONTENT_KEY) || "{}"),
+    studyTimer: JSON.parse(localStorage.getItem(STUDY_KEY) || "null")
+  };
+}
+
+function createVYORABackup() {
+  return {
+    app: "VYORA",
+    type: "vyora-backup",
+    version: 1,
+    createdAt: new Date().toISOString(),
+    data: getVYORAData()
+  };
+}
+
+function downloadVYORABackup() {
+  try {
+    const backup = createVYORABackup();
+
+    const blob = new Blob(
+      [JSON.stringify(backup, null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `vyora-backup-${getTodayKey()}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    return true;
+  } catch (error) {
+    console.error("Backup error:", error);
+    alert("تعذر إنشاء النسخة الاحتياطية.");
+    return false;
+  }
+}
+
+function validateVYORABackup(backup) {
+  if (
+    !backup ||
+    typeof backup !== "object" ||
+    backup.app !== "VYORA" ||
+    backup.type !== "vyora-backup" ||
+    backup.version !== 1 ||
+    !backup.data ||
+    typeof backup.data !== "object"
+  ) {
+    return false;
+  }
+
+  const data = backup.data;
+
+  if (!Array.isArray(data.tasks)) return false;
+
+  const validTasks = data.tasks.every(task =>
+    task &&
+    typeof task === "object" &&
+    typeof task.id === "string" &&
+    typeof task.title === "string" &&
+    task.title.length <= 500
+  );
+
+  if (!validTasks) return false;
+
+  if (
+    !data.dailyContent ||
+    typeof data.dailyContent !== "object" ||
+    Array.isArray(data.dailyContent)
+  ) {
+    return false;
+  }
+
+  if (
+    data.studyTimer !== null &&
+    (
+      !data.studyTimer ||
+      typeof data.studyTimer !== "object" ||
+      Array.isArray(data.studyTimer) ||
+      typeof data.studyTimer.remainingMs !== "number" ||
+      !Number.isFinite(data.studyTimer.remainingMs) ||
+      data.studyTimer.remainingMs < 0
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+let selectedBackup = null;
+
+const backupFileInput = getElement("backup-file");
+const backupImportButton = getElement("backup-import");
+const backupExportButton = getElement("backup-export");
+
+backupExportButton?.addEventListener("click", () => {
+  downloadVYORABackup();
+});
+
+backupFileInput?.addEventListener("change", async () => {
+  selectedBackup = null;
+
+  if (backupImportButton) {
+    backupImportButton.disabled = true;
+  }
+
+  const file = backupFileInput.files?.[0];
+
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("حجم الملف أكبر من الحد المسموح (5 MB).");
+    backupFileInput.value = "";
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    if (!validateVYORABackup(backup)) {
+      throw new Error("Invalid backup");
+    }
+
+    selectedBackup = backup;
+
+    if (backupImportButton) {
+      backupImportButton.disabled = false;
+    }
+
+    alert("تم التحقق من الملف بنجاح. يمكنك الآن استعادة البيانات.");
+  } catch (error) {
+    console.error("Backup validation error:", error);
+    alert("الملف غير صالح أو ليس نسخة VYORA احتياطية.");
+    backupFileInput.value = "";
+  }
+});
+
+backupImportButton?.addEventListener("click", () => {
+  if (!selectedBackup || !validateVYORABackup(selectedBackup)) {
+    alert("اختر ملف نسخة احتياطية صالحاً أولاً.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "سيتم حفظ نسخة من بياناتك الحالية أولاً، ثم استبدالها ببيانات النسخة المختارة. هل تريد المتابعة؟"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    // حفظ بيانات المستخدم الحالية قبل الاستعادة
+    if (!downloadVYORABackup()) return;
+
+    const data = selectedBackup.data;
+
+    // تجهيز القيم الجديدة
+    const newTasks = data.tasks;
+    const newContent = data.dailyContent;
+    const newStudy = data.studyTimer;
+
+    // حفظ البيانات الجديدة
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTasks));
+    localStorage.setItem(CONTENT_KEY, JSON.stringify(newContent));
+    localStorage.setItem(STUDY_KEY, JSON.stringify(newStudy));
+
+    // تحديث متغيرات التطبيق
+    tasks = newTasks;
+    contentState = newContent;
+    studyTimer = newStudy;
+
+    // إيقاف أي مؤقت قديم
+    if (studyInterval) {
+      clearInterval(studyInterval);
+      studyInterval = null;
+    }
+
+    // تحديث الواجهات
+    renderEverything();
+    renderStudyTasks();
+
+    alert("تمت استعادة بيانات VYORA بنجاح.");
+
+    selectedBackup = null;
+    backupFileInput.value = "";
+    backupImportButton.disabled = true;
+
+  } catch (error) {
+    console.error("Restore error:", error);
+    alert("حدث خطأ أثناء الاستعادة. تحقق من مساحة التخزين.");
+  }
+});
 
 startApp();
 

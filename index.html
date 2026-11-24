@@ -2,18 +2,20 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0b0e1c">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0b0e1c">
-  <title>VYORA | أعد بناء يومك</title>
+ <link rel="manifest" href="./manifest.json">
+ <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="stylesheet" href="style.css">
-</head>
-<body>
 
+  <title>VYORA | أعد بناء يومك</title>
+</head>
+
+<body>
   <div class="app-shell">
 
+    <!-- القائمة الجانبية -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-symbol">V</div>
@@ -36,6 +38,11 @@
           <span>مهامي</span>
         </button>
 
+        <button class="nav-link" data-page="study">
+          <span class="nav-icon">◉</span>
+          <span>استوديو الدراسة</span>
+        </button>
+
         <button class="nav-link" data-page="schedule">
           <span class="nav-icon">◷</span>
           <span>جدولي اليومي</span>
@@ -44,7 +51,11 @@
         <button class="nav-link" data-page="stats">
           <span class="nav-icon">▥</span>
           <span>تحليل أدائي</span>
-        </button>
+      </button>
+        <button class="nav-link" data-page="data">
+  <span class="nav-icon">🛡</span>
+  <span>إدارة البيانات</span>
+</button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -56,6 +67,7 @@
       </div>
     </aside>
 
+    <!-- المحتوى الرئيسي -->
     <main class="main-content">
 
       <header class="topbar">
@@ -70,7 +82,7 @@
         </div>
       </header>
 
-      <!-- الصفحة الرئيسية -->
+      <!-- الرئيسية -->
       <section class="page active" id="home-page">
 
         <div class="welcome-section">
@@ -144,7 +156,7 @@
 
       </section>
 
-      <!-- صفحة المهام -->
+      <!-- المهام -->
       <section class="page" id="tasks-page">
 
         <div class="page-intro">
@@ -264,7 +276,81 @@
 
       </section>
 
-      <!-- صفحة الجدول اليومي -->
+      <!-- استوديو الدراسة -->
+      <section class="page" id="study-page">
+
+        <div class="page-intro">
+          <span class="eyebrow">FOCUS MODE</span>
+          <h2>استوديو الدراسة</h2>
+          <p>حوّل وقتك إلى جلسات تركيز وإنجاز.</p>
+        </div>
+
+        <div class="study-panel">
+
+          <div class="study-task-info">
+            <label for="study-task-select">اختر المهمة الدراسية</label>
+
+            <select id="study-task-select">
+              <option value="">اختر مهمة من مهامك الدراسية</option>
+            </select>
+
+            <span>المهمة الحالية</span>
+            <h3 id="study-task-title">لم تختر مهمة بعد</h3>
+            <p id="study-task-duration">اختر مهمة من قائمة مهامي للبدء.</p>
+          </div>
+
+          <div class="pomodoro-timer">
+            <div class="timer-mode" id="timer-mode">جاهز للتركيز</div>
+
+            <div class="timer-display" id="timer-display">25:00</div>
+
+            <div class="timer-progress">
+              <div id="timer-progress-bar"></div>
+            </div>
+
+            <div class="timer-session">
+              الجلسات المنجزة:
+              <strong id="timer-sessions">0</strong>
+            </div>
+
+            <div class="timer-actions">
+              <button id="timer-start" class="primary-btn" type="button">
+                ابدأ التركيز
+              </button>
+
+              <button id="timer-pause" class="secondary-btn" type="button">
+                إيقاف مؤقت
+              </button>
+
+              <button id="timer-reset" class="secondary-btn" type="button">
+                إعادة ضبط
+              </button>
+            </div>
+          </div>
+
+          <div class="study-settings">
+            <h3>إعدادات بومودورو</h3>
+
+            <label>
+              مدة التركيز بالدقائق
+              <input id="focus-duration" type="number" min="1" max="120" value="25">
+            </label>
+
+            <label>
+              الاستراحة القصيرة
+              <input id="short-break-duration" type="number" min="1" max="60" value="5">
+            </label>
+
+            <label>
+              الاستراحة الطويلة
+              <input id="long-break-duration" type="number" min="1" max="90" value="15">
+            </label>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- الجدول اليومي -->
       <section class="page" id="schedule-page">
 
         <div class="page-intro">
@@ -304,7 +390,7 @@
 
       </section>
 
-      <!-- صفحة تحليل الأداء -->
+      <!-- تحليل الأداء -->
       <section class="page" id="stats-page">
 
         <div class="page-intro">
@@ -364,13 +450,44 @@
               <h3>توزيع المهام حسب التصنيف</h3>
             </div>
           </div>
+
           <div id="category-breakdown" class="category-breakdown">
             <p class="empty-message">ستظهر بيانات التصنيفات بعد إضافة المهام.</p>
           </div>
         </section>
 
       </section>
+<section class="page" id="data-page">
 
+  <div class="page-intro">
+    <h2>إدارة البيانات</h2>
+    <p>بياناتك مهمة. احفظها واستعدها بأمان.</p>
+  </div>
+
+  <div class="card">
+    <h3>تصدير نسخة احتياطية</h3>
+    <p>احفظ نسخة من مهامك وبياناتك على جهازك.</p>
+    <button class="primary-btn" id="backup-export">
+      تصدير البيانات
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>استعادة نسخة احتياطية</h3>
+    <p>اختر ملف نسخة VYORA احتياطية لاستعادة بياناتك.</p>
+
+    <input
+      type="file"
+      id="backup-file"
+      accept=".json,application/json"
+    >
+
+    <button class="primary-btn" id="backup-import" disabled>
+      استعادة البيانات
+    </button>
+  </div>
+
+</section>
       <footer class="main-footer">
         <span>VYORA</span>
         <span>خطط بوعي. أنجز بهدوء.</span>
